@@ -5,6 +5,7 @@ import dev.java.ecommerce.basketservice.dto.response.PlatziProductResponseDTO;
 import dev.java.ecommerce.basketservice.entity.Basket;
 import dev.java.ecommerce.basketservice.entity.Product;
 import dev.java.ecommerce.basketservice.entity.Status;
+import dev.java.ecommerce.basketservice.exception.BasketNotFoundException;
 import dev.java.ecommerce.basketservice.repository.BasketRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -52,4 +53,29 @@ public class BasketService {
         return basketRepository.save(newBasket);
     }
 
+    public Basket updateBasket(String basketId, BasketRequestDTO basketRequest) {
+        Optional<Basket> optBasket = findBasketById(basketId);
+
+        if (optBasket.isPresent()) {
+            Basket savedBasket = optBasket.get();
+            List<Product> products = new ArrayList<>();
+
+            basketRequest.products().forEach(productRequestDTO -> {
+                PlatziProductResponseDTO platziProductResponse = productService.getProductById(productRequestDTO.id());
+                products.add(Product.builder()
+                        .id(platziProductResponse.id())
+                        .title(platziProductResponse.title())
+                        .price(platziProductResponse.price())
+                        .quantity(productRequestDTO.quantity())
+                        .build());
+            });
+
+            savedBasket.setProducts(products);
+            savedBasket.calculateTotalPrice();
+            return basketRepository.save(savedBasket);
+        } else {
+            throw new BasketNotFoundException("Basket not found with id: " + basketId);
+        }
+
+    }
 }
