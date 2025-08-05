@@ -1,6 +1,7 @@
 package dev.java.ecommerce.basketservice.service;
 
 import dev.java.ecommerce.basketservice.dto.request.BasketRequestDTO;
+import dev.java.ecommerce.basketservice.dto.request.PaymentRequest;
 import dev.java.ecommerce.basketservice.dto.response.PlatziProductResponseDTO;
 import dev.java.ecommerce.basketservice.entity.Basket;
 import dev.java.ecommerce.basketservice.entity.Product;
@@ -77,5 +78,19 @@ public class BasketService {
             throw new BasketNotFoundException("Basket not found with id: " + basketId);
         }
 
+    }
+
+    public Basket payBasket(String id, PaymentRequest paymentRequest) {
+        Optional<Basket> optionalBasket = findBasketById(id);
+
+        if (optionalBasket.isPresent()) {
+            Basket savedBasket = optionalBasket.get();
+            savedBasket.setPaymentMethod(paymentRequest.paymentMethod());
+            savedBasket.setStatus(Status.SOLD);
+            return basketRepository.save(savedBasket);
+
+        } else {
+            throw new BasketNotFoundException("Basket not found with id: " + id);
+        }
     }
 }
